@@ -1,0 +1,8 @@
+En resum, el pla és:
+- llegir sobre state-estimation
+- determinar el(s) model(s) de rate que volen tractar
+- implementar un Kalman filter (KF) per un problema simple (mira els exemples del llibre)
+- implementar un Extended Kalman filter (EKF) per un problema simple (mira els exemples del llibre)
+- implementar un Cubature Kalman filter (CKF) per un problema simple (mira els exemples del llibre)
+- aplicar el CKF a fer inferencia sobre el(s) model(s) de rate 
+- en el procés veurem quins són els reptes pels que cal que pensem coses una mica més sofisticades.
