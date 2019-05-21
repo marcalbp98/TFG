@@ -18,7 +18,7 @@ dt=0.1;
 r=0.9;
 a=0.4;
 w=0.4;
-Lambda=1;
+Lambda=0.5;
 I=0;
 Theta=150;
 k=100;
@@ -30,6 +30,9 @@ da=(-a + r)/Ta;  % Slow variable Ta
 sigmar= 0.003;
 sigman= 0.003;
 Q  = [sigmar^2 0; 0 sigman^2];
+
+%Measurements noise
+R= 0.00001;
 %Initial Points
 m0 = [dr;da;];
 P0 = 0.001*eye(2);
@@ -44,32 +47,16 @@ X = [];
 Y = [];
 t=0;
 x= m0;
-randn('state',33);
 for k=1:steps
     x = [x(1)+(-r + activationfunction((w*r-Lambda*a+I),Theta,k))*dt;
          x(2)+((-a + r)/Ta)*dt];
-    noise = QL*randn(size(QL,1),1);
-    y= x;
-    x = x + noise;
+    x = x + QL*randn(size(QL,1),1);
+    y = x + sqrt(R)*randn;
     t = t + dt;
     X = [X x];
     Y = [Y y];
     T = [T t];
 end
-% figure, plot(T,X(1,:),'.',T,Y(1,:),'-');
-% title('Rate simulation')
-% legend('Measurements','Trajectory');
-% xlabel('{\it x}_1');
-% ylabel('{\it x}_2');
-% 
-% figure, plot(T,X(2,:),'.',T,Y(2,:),'-');
-% title('Adaptation simulation')
-% legend('Measurements','Trajectory');
-% xlabel('{\it x}_1');
-% ylabel('{\it x}_2');
-
-rmse_raw_r = sqrt(mean(sum((Y(2,:) - X(1,:)).^2,1)))
-rmse_raw_a = sqrt(mean(sum((Y(2,:) - X(2,:)).^2,1)))
 
 %%
 % Kalman filter
@@ -88,22 +75,14 @@ for k=1:size(Y,2)
 
     S = H*P*H' + R;
     K = P*H'/S;
-    m = m + K*(X(:,k) - H*m);
+    m = m + K*(Y(:,k) - H*m);
     P = P - K*S*K';
 
     kf_m(:,k) = m;
     kf_P(:,:,k) = P;
 end
 
-figure, plot(T,Y(1,:),'k-',T,X(1,:),'r.',T,kf_m(1,:),'b--');
-title('KF estimate for firing rate');
-legend('True','Measurements','Estimate');
+rmse_kf_r = sqrt(mean((kf_m(1,:)-X(1,:)).^2));
+rmse_kf_a = sqrt(mean((kf_m(2,:)-X(2,:)).^2));
 
-rmse_kf_r = sqrt(mean((X(1,:)-kf_m(1,:)).^2))
-
-
-figure, plot(T,Y(2,:),'k-',T,X(2,:),'r.',T,kf_m(2,:),'b--');
-title('KF estimate for adaptation rate');
-legend('True','Measurements','Estimate');
-
-rmse_kf_a = sqrt(mean((X(2,:)-kf_m(2,:)).^2))
+%clearvars -except rmse_raw_r rmse_raw_a
