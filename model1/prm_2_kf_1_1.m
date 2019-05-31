@@ -14,32 +14,32 @@
 %   Lambda = efecte d'adaptació
 %   r = rate
 %   a = adaptació
-dt=0.01;
-r=0.5;
+dt=0.1;
+r=0.9;
 a=0.4;
 w=0.4;
 Lambda=0.5;
 I=0;
-
-Theta=0.2;
-k=30;
-Ta=400;
-%dr = (-r + activationfunction(w*r-Lambda*a+I,Theta,k))*dt;
-%da=((-a + r)/Ta)*dt;  % Slow variable Ta
+Theta=150;
+k=100;
+s=0.2;
+Ta=500;
+Ts=500;
 
 %Process noise covariance matrix
-sigmar= 0.003;
-sigman= 0.003;
-Q  = [sigmar^2 0; 0 sigman^2];
+sigma_r= 0.003;
+sigma_a= 0.003;
+sigma_s= 0.003;
+Q  = [sigma_r^2 0 0; 0 sigma_a^2 0; 0 0 sigma_s^2];
 
 %Measurements noise
 R= 0.00001;
 %Initial Points
-m0 = [r;a;];
-P0 = 0.001*eye(2);
+m0 = [r;a;s];
+P0 = 0.001*eye(3);
 
 QL = chol(Q,'lower');
-steps=5000;
+steps=500;
 %%
 % Simulating data
 %
@@ -50,8 +50,9 @@ t=0;
 x= m0;
 randn('state',33);
 for k=1:steps
-    x = [x(1)+(-x(1) + activationfunction((w*x(1)-Lambda*x(2)+I),Theta,k))*dt;
-         x(2)+((-x(2) + x(1))/Ta)*dt];
+    x = [x(1)+(-x(1) + activationfunction((w*x(1)*x(3)-Lambda*x(2)+I),Theta,k))*dt;
+         x(2)+((-x(2) + x(1))/Ta)*dt;
+         x(3)+((-x(3) + x(1))/Ts)*dt];
     x = x + QL*randn(size(QL,1),1);
     y = x + sqrt(R)*randn;
     t = t + dt;
@@ -73,21 +74,22 @@ end
 
 rmse_raw_r = sqrt(mean(sum((Y(1,:) - X(1,:)).^2,1)))
 rmse_raw_a = sqrt(mean(sum((Y(2,:) - X(2,:)).^2,1)))
-
+rmse_raw_s = sqrt(mean(sum((Y(3,:) - X(3,:)).^2,1)))
 %%
 % Kalman filter
 %
-H=eye(2);
+H=eye(3);
 m = m0;
 P = P0;
-R=Q;
+R=Q*0.5;
 kf_m = zeros(size(m,1),size(Y,2));
 kf_P = zeros(size(P,1),size(P,2),size(Y,2));
 for k=1:size(Y,2)
-    epsilon= exp((-I - m(1)*w +Theta+ m(2)*Lambda)/k);
-    A= [-1+((epsilon)*w)/(((1 + epsilon)^2)*k) -(epsilon*Lambda)/(((1 + epsilon)^2)*k);1/Ta (-1)/Ta];%jacobia
-    m = [m(1)+(-m(1) + activationfunction((w*m(1)-Lambda*m(2)+I),Theta,k))*dt;
-         m(2)+((-m(2) + m(1))/Ta)*dt];
+    epsilon= exp((-I - m(1)*m(3)*w +Theta+ m(2)*Lambda)/k);
+    A= [-1+(epsilon*m(3)*w)/(((1+epsilon)^2)*k) -(epsilon*Lambda)/(((1 + epsilon)^2)*k) (epsilon*m(1)*w)/(((1 + epsilon)^2)*k);1/Ta (-1)/Ta 0;1/Ts 0 (-1)/Ts];%jacobia
+    m = [m(1)+(-m(1) + activationfunction((w*m(1)*m(3)-Lambda*m(2)+I),Theta,k))*dt;
+         m(2)+((-m(2) + m(1))/Ta)*dt;
+         m(3)+((-m(3) + m(1))/Ts)*dt];
     P = A*P*A' + Q;
 
     S = H*P*H' + R;
@@ -112,4 +114,9 @@ legend('True','Measurements','Estimate');
 
 rmse_kf_a = sqrt(mean((X(2,:)-kf_m(2,:)).^2))
 
-%clearvars -except rmse_raw_r rmse_raw_a
+figure, plot(T,X(3,:),'k-',T,Y(3,:),'r.',T,kf_m(3,:),'b--');
+title('KF estimate for adaptation rate');
+legend('True','Measurements','Estimate');
+
+rmse_kf_a = sqrt(mean((X(3,:)-kf_m(3,:)).^2))
+clearvars -except rmse_raw_r rmse_raw_a
