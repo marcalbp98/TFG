@@ -102,6 +102,8 @@ end
 figure, plot(T,X(1,:),'k-',T,Y(1,:),'r.',T,kf_m(1,:),'b--');
 title('KF estimate for firing rate');
 legend('True','Measurements','Estimate');
+xlabel('Time{\it (s)}');
+ylabel('Voltage{\it (V)}');
 
 rmse_kf_r = sqrt(mean((X(1,:)-kf_m(1,:)).^2))
 
@@ -109,6 +111,8 @@ rmse_kf_r = sqrt(mean((X(1,:)-kf_m(1,:)).^2))
 figure, plot(T,X(2,:),'k-',T,Y(2,:),'r.',T,kf_m(2,:),'b--');
 title('KF estimate for adaptation rate');
 legend('True','Measurements','Estimate');
+xlabel('Time{\it (s)}');
+ylabel('Voltage{\it (V)}');
 
 rmse_kf_a = sqrt(mean((X(2,:)-kf_m(2,:)).^2))
 
