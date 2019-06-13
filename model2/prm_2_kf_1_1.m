@@ -14,11 +14,12 @@
 %   Lambda = efecte d'adaptació
 %   r = rate
 %   a = adaptació
-dt=0.1;
-r=0.9;
+dt=0.01;
+r=0.35;
 a=0.4;
 w=0.4;
 Lambda=0.5;
+Delta=0.3;
 I=0;
 Theta=150;
 k=100;
@@ -33,13 +34,14 @@ sigma_s= 0.003;
 Q  = [sigma_r^2 0 0; 0 sigma_a^2 0; 0 0 sigma_s^2];
 
 %Measurements noise
-R= 0.00001;
+R= [sigma_r^2 0 0; 0 sigma_a^2 0; 0 0 sigma_s^2];
 %Initial Points
 m0 = [r;a;s];
 P0 = 0.001*eye(3);
 
 QL = chol(Q,'lower');
-steps=500;
+RL=  chol(R,'lower');
+steps=5000;
 %%
 % Simulating data
 %
@@ -52,9 +54,9 @@ randn('state',33);
 for k=1:steps
     x = [x(1)+(-x(1) + activationfunction((w*x(1)*x(3)-Lambda*x(2)+I),Theta,k))*dt;
          x(2)+((-x(2) + x(1))/Ta)*dt;
-         x(3)+((-x(3) + x(1))/Ts)*dt];
+         x(3)+((-x(3) + 1-Delta*x(1)*x(3))/Ts)*dt];
     x = x + QL*randn(size(QL,1),1);
-    y = x + sqrt(R)*randn;
+    y = x + RL*randn(size(RL,1),1);
     t = t + dt;
     X = [X x];
     Y = [Y y];
@@ -81,15 +83,14 @@ rmse_raw_s = sqrt(mean(sum((Y(3,:) - X(3,:)).^2,1)))
 H=eye(3);
 m = m0;
 P = P0;
-R=Q*0.5;
 kf_m = zeros(size(m,1),size(Y,2));
 kf_P = zeros(size(P,1),size(P,2),size(Y,2));
 for k=1:size(Y,2)
     epsilon= exp((-I - m(1)*m(3)*w +Theta+ m(2)*Lambda)/k);
-    A= [-1+(epsilon*m(3)*w)/(((1+epsilon)^2)*k) -(epsilon*Lambda)/(((1 + epsilon)^2)*k) (epsilon*m(1)*w)/(((1 + epsilon)^2)*k);1/Ta (-1)/Ta 0;1/Ts 0 (-1)/Ts];%jacobia
+    A= [-1+(epsilon*m(3)*w)/(((1+epsilon)^2)*k) -(epsilon*Lambda)/(((1 + epsilon)^2)*k) (epsilon*m(1)*w)/(((1 + epsilon)^2)*k);1/Ta (-1)/Ta 0;(-Delta*m(3))/Ts 0 (-1-Delta*m(1))/Ts];%jacobia
     m = [m(1)+(-m(1) + activationfunction((w*m(1)*m(3)-Lambda*m(2)+I),Theta,k))*dt;
          m(2)+((-m(2) + m(1))/Ta)*dt;
-         m(3)+((-m(3) + m(1))/Ts)*dt];
+         m(3)+((-m(3) + 1-Delta*m(1)*m(3))/Ts)*dt];
     P = A*P*A' + Q;
 
     S = H*P*H' + R;
