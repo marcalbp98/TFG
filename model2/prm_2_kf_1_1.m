@@ -14,8 +14,8 @@
 %   Lambda = efecte d'adaptació
 %   r = rate
 %   a = adaptació
-dt=0.01;
-r=0.35;
+dt=0.0005;
+r=0.48;
 a=0.4;
 w=0.4;
 Lambda=0.5;
@@ -31,7 +31,7 @@ Ts=1000;
 sigma_r= 0.003;
 sigma_a= 0.003;
 sigma_s= 0.003;
-Q  = [sigma_r^2 0 0; 0 sigma_a^2 0; 0 0 sigma_s^2];
+Q  = [sigma_r^2 0 0; 0 sigma_a^2 0; 0 0 sigma_s^2]*0.01;
 
 %Measurements noise
 R= [sigma_r^2 0 0; 0 sigma_a^2 0; 0 0 sigma_s^2];
@@ -41,7 +41,7 @@ P0 = 0.001*eye(3);
 
 QL = chol(Q,'lower');
 RL=  chol(R,'lower');
-steps=5000;
+steps=40000;
 %%
 % Simulating data
 %
@@ -102,22 +102,38 @@ for k=1:size(Y,2)
     kf_P(:,:,k) = P;
 end
 
-figure, plot(T,X(1,:),'k-',T,Y(1,:),'r.',T,kf_m(1,:),'b--');
-title('KF estimate for firing rate');
-legend('True','Measurements','Estimate');
+h=fig3_1();
+handles=guihandles(h);
+set(h, 'MenuBar', 'figure');
+
+plot(T,Y(1,:),'r.',T,kf_m(1,:),'b--',T,X(1,:),'k-', 'Parent',handles.axes1);
+title(handles.axes1,'EKF estimate for firing rate');
+legend(handles.axes1,' Measurements Y_{\itt}',' Estimate {E_{\itt}}',' True X_{\itt}');
+xlabel(handles.axes1,'Time{\it(s)}');
+ylabel(handles.axes1,'Voltage{\it(V)}');
+xlim(handles.axes1,[min(T) max(T)])
+%saveas(gcf,'kf_r_m1.png')
 
 rmse_kf_r = sqrt(mean((X(1,:)-kf_m(1,:)).^2))
 
 
-figure, plot(T,X(2,:),'k-',T,Y(2,:),'r.',T,kf_m(2,:),'b--');
-title('KF estimate for adaptation');
-legend('True','Measurements','Estimate');
+plot(T,Y(2,:),'r.',T,kf_m(2,:),'b--',T,X(2,:),'k-', 'Parent',handles.axes2);
+title(handles.axes2,'EKF estimate for spike-frequency adaptation');
+legend(handles.axes2,' Measurements Y_{\itt}',' Estimate {E_{\itt}}',' True X_{\itt}');
+xlabel(handles.axes2,'Time{\it(s)}');
+ylabel(handles.axes2,'Voltage{\it(V)}');
+xlim(handles.axes2,[min(T) max(T)])
+%saveas(gcf,'kf_r_m1.png')
 
 rmse_kf_a = sqrt(mean((X(2,:)-kf_m(2,:)).^2))
 
-figure, plot(T,X(3,:),'k-',T,Y(3,:),'r.',T,kf_m(3,:),'b--');
-title('KF estimate for synaptic depression');
-legend('True','Measurements','Estimate');
+plot(T,Y(3,:),'r.',T,kf_m(3,:),'b--',T,X(3,:),'k-', 'Parent',handles.axes3);
+title(handles.axes3,'EKF estimate for synaptic depression');
+legend(handles.axes3,' Measurements Y_{\itt}',' Estimate {E_{\itt}}',' True X_{\itt}');
+xlabel(handles.axes3,'Time{\it(s)}');
+ylabel(handles.axes3,'Voltage{\it(V)}');
+xlim(handles.axes3,[min(T) max(T)])
+%saveas(gcf,'kf_r_m1.png')
 
 rmse_kf_a = sqrt(mean((X(3,:)-kf_m(3,:)).^2))
 clearvars -except rmse_raw_r rmse_raw_a

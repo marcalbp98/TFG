@@ -49,7 +49,6 @@ X = [];
 Y = [];
 t=0;
 x= m0;
-randn('state',33);
 for k=1:steps
     x = [x(1)+(-x(1) + activationfunction((w*x(1)-Lambda*x(2)+I),Theta,k))*dt;
          x(2)+((-x(2) + x(1))/Ta)*dt];
@@ -72,8 +71,8 @@ end
 % xlabel('{\it x}_1');
 % ylabel('{\it x}_2');
 
-rmse_raw_r = sqrt(mean(sum((Y(1,:) - X(1,:)).^2,1)))
-rmse_raw_a = sqrt(mean(sum((Y(2,:) - X(2,:)).^2,1)))
+rmse_raw_r = sqrt(mean(sum((Y(1,:) - X(1,:)).^2,1)));
+rmse_raw_a = sqrt(mean(sum((Y(2,:) - X(2,:)).^2,1)));
 
 %%
 % Kalman filter
@@ -81,7 +80,6 @@ rmse_raw_a = sqrt(mean(sum((Y(2,:) - X(2,:)).^2,1)))
 H=eye(2);
 m = m0;
 P = P0;
-R=Q;
 kf_m = zeros(size(m,1),size(Y,2));
 kf_P = zeros(size(P,1),size(P,2),size(Y,2));
 for k=1:size(Y,2)
@@ -100,23 +98,8 @@ for k=1:size(Y,2)
     kf_P(:,:,k) = P;
 end
 
-figure, plot(T,Y(1,:),'r.',T,kf_m(1,:),'b--',T,X(1,:),'k-');
-title('EKF estimate for firing rate');
-legend(' Measurements Y_{\itt}',' Estimate {E_{\itt}}',' True X_{\itt}');
-xlabel('Time{\it(s)}');
-ylabel('Voltage{\it(V)}');
-xlim([min(T) max(T)])
-%saveas(gcf,'kf_r_m1.png')
-rmse_kf_r = sqrt(mean((X(1,:)-kf_m(1,:)).^2))
 
-
-figure, plot(T,Y(2,:),'r.',T,kf_m(2,:),'b--',T,X(2,:),'k-');
-title('EKF estimate for adaptation rate');
-legend(' Measurements Y_{\itt}',' Estimate {E_{\itt}}',' True X_{\itt}');
-xlabel('Time{\it (s)}');
-ylabel('Voltage{\it (V)}');
-%saveas(gcf,'kf_a_m1.png')
-
-rmse_kf_a = sqrt(mean((X(2,:)-kf_m(2,:)).^2))
+rmse_kf_r = sqrt(mean((X(1,:)-kf_m(1,:)).^2));
+rmse_kf_a = sqrt(mean((X(2,:)-kf_m(2,:)).^2));
 
 %clearvars -except rmse_raw_r rmse_raw_a

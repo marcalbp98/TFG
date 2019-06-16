@@ -14,7 +14,7 @@
 %   Lambda = efecte d'adaptació
 %   r = rate
 %   a = adaptació
-dt=0.0005
+dt=0.0005;
 %excitatory population:
 r_e=0.9;
 a_e=0.05;
@@ -73,7 +73,6 @@ X = [];
 Y = [];
 t=0;
 x= m0;
-randn('state',33);
 for k=1:steps
     x = [x(1)+((-x(1) + activationfunction(wee*x(1)*x(5)-wie*x(2)*x(6)-Lambda_e*x(3)+I_e,Theta,k))/Te)*dt;
          x(2)+((-x(2) + activationfunction(wei*x(1)*x(5)-wii*x(2)*x(6)-Lambda_i*x(4)+I_i,Theta,k))/Ti)*dt;
@@ -101,7 +100,12 @@ end
 % xlabel('{\it x}_1');
 % ylabel('{\it x}_2');
 
-rmse_raw_r = sqrt(mean(sum((Y(1,:) - X(1,:)).^2,1)))
+rmse_raw_re = sqrt(mean(sum((Y(1,:) - X(1,:)).^2,1)));
+rmse_raw_ri = sqrt(mean(sum((Y(2,:) - X(2,:)).^2,1)));
+rmse_raw_ae = sqrt(mean(sum((Y(3,:) - X(3,:)).^2,1)));
+rmse_raw_ai = sqrt(mean(sum((Y(4,:) - X(4,:)).^2,1)));
+rmse_raw_se = sqrt(mean(sum((Y(5,:) - X(5,:)).^2,1)));
+rmse_raw_si = sqrt(mean(sum((Y(6,:) - X(6,:)).^2,1)));
 %%
 % Kalman filter
 %
@@ -136,21 +140,11 @@ for k=1:size(Y,2)
     kf_P(:,:,k) = P;
 end
 
-figure, plot(T,X(1,:),'k-',T,Y(1,:),'r.',T,kf_m(1,:),'b--');
-title('KF estimate for firing rate of exitatory neurons');
-legend('True','Measurements','Estimate');
-xlabel('Time{\it (s)}');
-ylabel('Voltage{\it (V)}');
 
-rmse_kf_r = sqrt(mean((X(1,:)-kf_m(1,:)).^2))
-
-
-figure, plot(T,X(2,:),'k-',T,Y(2,:),'r.',T,kf_m(2,:),'b--');
-title('KF estimate for firing rate of inhibitory neurons');
-legend('True','Measurements','Estimate');
-xlabel('Time{\it (s)}');
-ylabel('Voltage{\it (V)}');
-
-rmse_kf_a = sqrt(mean((X(2,:)-kf_m(2,:)).^2))
-
-clearvars -except rmse_raw_r rmse_raw_a
+rmse_kf_re = sqrt(mean(sum((kf_m(1,:) - X(1,:)).^2,1)));
+rmse_kf_ri = sqrt(mean(sum((kf_m(2,:) - X(2,:)).^2,1)));
+rmse_kf_ae = sqrt(mean(sum((kf_m(3,:) - X(3,:)).^2,1)));
+rmse_kf_ai = sqrt(mean(sum((kf_m(4,:) - X(4,:)).^2,1)));
+rmse_kf_se = sqrt(mean(sum((kf_m(5,:) - X(5,:)).^2,1)));
+rmse_kf_si = sqrt(mean(sum((kf_m(6,:) - X(6,:)).^2,1)));
+%clearvars -except rmse_raw_r rmse_raw_a
